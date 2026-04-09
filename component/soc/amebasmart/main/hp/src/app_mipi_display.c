@@ -340,6 +340,7 @@ static void LcdcInitConfig(void)
         LCDC_InitStruct.layerx[idx].LCDC_LayerEn = ENABLE;
         LCDC_InitStruct.layerx[idx].LCDC_LayerImgFormat = LCDC_LAYER_IMG_FORMAT_RGB565;
         LCDC_InitStruct.layerx[idx].LCDC_LayerImgBaseAddr = (u32)DDR_FRAME_BUFFER_ADDR;
+        /* Use standard 1-based coordinates */
         LCDC_InitStruct.layerx[idx].LCDC_LayerHorizontalStart = 1;
         LCDC_InitStruct.layerx[idx].LCDC_LayerHorizontalStop = LCDC_TEST_IMG_BUF_X;
         LCDC_InitStruct.layerx[idx].LCDC_LayerVerticalStart = 1;
@@ -362,7 +363,8 @@ void mipi_display_clear(u16 color)
     for (u32 i = 0; i < total_pixels; i++) {
         fb[i] = color;
     }
-    DCache_CleanInvalidate((u32)DDR_FRAME_BUFFER_ADDR, LCDC_IMG_BUF_SIZE);
+    /* Fix: Use correct buffer size for RGB565 (2 bytes per pixel) */
+    DCache_CleanInvalidate((u32)DDR_FRAME_BUFFER_ADDR, total_pixels * 2);
 }
 
 void mipi_display_init(void)
