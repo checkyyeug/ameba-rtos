@@ -52,10 +52,15 @@ _WEAK void app_pre_example(void)
 
 }
 
+#ifdef CONFIG_LVGL
+extern void app_lvgl_music_start(void);
+#endif
+
 _WEAK void app_example(void)
 {
-
-
+#ifdef CONFIG_LVGL
+	app_lvgl_music_start();
+#endif
 }
 
 #ifdef CONFIG_WLAN

@@ -113,7 +113,8 @@ _WEAK void app_pre_example(void)
 
 _WEAK void app_example(void)
 {
-
+    extern void mipi_display_init(void);
+    mipi_display_init();
 }
 
 #ifdef CONFIG_VFS_ENABLED

@@ -38,7 +38,18 @@ set(private_compile_options)         #private compile_options
 # Component private part, user config begin
 
 ameba_list_append(private_sources main.c)
+ameba_list_append(private_sources app_lvgl_music.c)
 ameba_list_append(private_includes ${c_CMPT_RTK_COEX_DIR})
+
+# LVGL includes for app_lvgl_music.c
+ameba_list_append(private_includes ${c_BASEDIR}/component/ui/lvgl)
+ameba_list_append(private_includes ${c_BASEDIR}/component/ui/lvgl/src)
+ameba_list_append(private_includes ${c_BASEDIR}/component/ui/lvgl/port)
+ameba_list_append(private_includes ${c_BASEDIR}/component/ui/lvgl/demos)
+ameba_list_append(private_includes ${c_BASEDIR}/component/ui/lvgl/demos/music)
+
+# LVGL private definitions
+ameba_list_append(private_definitions CONFIG_LVGL=1)
 
 # Component private part, user config end
 #------------------------------#

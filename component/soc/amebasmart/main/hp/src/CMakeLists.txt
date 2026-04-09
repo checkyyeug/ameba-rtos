@@ -38,6 +38,7 @@ set(private_compile_options)         #private compile_options
 # Component private part, user config begin
 
 ameba_list_append(private_sources main.c)
+ameba_list_append(private_sources app_mipi_display.c)
 
 # Component private part, user config end
 #------------------------------#
