@@ -21,28 +21,28 @@ ifndef BUILD_ENV_MK
     RM                  :=      $$(error "Replace RM with call to SHELL_DELETE.")
     RMDIR               :=      $$(error "Replace RMDIR with call to SHELL_REMOVE_DIR.")
 
-    ENV_FILE_TO_INCLUDE := unix.mk
-    ifdef OSTYPE
-        ifneq ($(findstring ${OSTYPE}, cygwin),)
-            ENV_FILE_TO_INCLUDE := cygwin.mk
-        else
-            ifneq ($(findstring ${OSTYPE}, MINGW32 mingw msys),)
-                ENV_FILE_TO_INCLUDE := msys.mk
-            endif
+    # On Windows, always use windows.mk since make may be invoked via cmd.exe
+    # which doesn't support "mkdir -p" (unix.mk) even if OSTYPE=msys
+    ifdef OS
+        ifneq ($(findstring ${OS}, Windows_NT),)
+            ENV_FILE_TO_INCLUDE := windows.mk
         endif
-    else
-        ifdef MSYSTEM
-            # Although the MINGW MSYS shell sets OSTYPE as msys in its environment,
-            # it does not appear in the GNU make view of environment variables.
-            # We use MSYSTEM as an alternative, as that is seen by make
-            ifneq ($(findstring ${MSYSTEM}, MINGW32 mingw msys),)
-                OSTYPE ?= msys
-                ENV_FILE_TO_INCLUDE := msys.mk
+    endif
+    ifndef ENV_FILE_TO_INCLUDE
+        ENV_FILE_TO_INCLUDE := unix.mk
+        ifdef OSTYPE
+            ifneq ($(findstring ${OSTYPE}, cygwin),)
+                ENV_FILE_TO_INCLUDE := cygwin.mk
+            else
+                ifneq ($(findstring ${OSTYPE}, MINGW32 mingw msys),)
+                    ENV_FILE_TO_INCLUDE := msys.mk
+                endif
             endif
         else
-            ifdef OS
-                ifneq ($(findstring ${OS}, Windows_NT),)
-                    ENV_FILE_TO_INCLUDE := windows.mk
+            ifdef MSYSTEM
+                ifneq ($(findstring ${MSYSTEM}, MINGW32 mingw msys),)
+                    OSTYPE ?= msys
+                    ENV_FILE_TO_INCLUDE := msys.mk
                 endif
             endif
         endif

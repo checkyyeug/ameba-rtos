@@ -11,7 +11,17 @@
 ifndef MSYS_MK
     MSYS_MK := $(lastword $(MAKEFILE_LIST))
 
-    include ${MAKE_HELPERS_DIRECTORY}unix.mk
+    # Use windows.mk when make is invoked via cmd.exe (ninja), not bash
+    # unix.mk uses "mkdir -p" which fails in cmd.exe
+    ifdef OS
+        ifneq ($(findstring ${OS}, Windows_NT),)
+            include ${MAKE_HELPERS_DIRECTORY}windows.mk
+        else
+            include ${MAKE_HELPERS_DIRECTORY}unix.mk
+        endif
+    else
+        include ${MAKE_HELPERS_DIRECTORY}unix.mk
+    endif
 
     # In MSYS executable files have the Windows .exe extension type.
     BIN_EXT := .exe

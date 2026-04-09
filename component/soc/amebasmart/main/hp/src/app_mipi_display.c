@@ -77,6 +77,11 @@ static MIPI_IRQInfo MipiIrqInfo = {
 };
 
 static const LCM_setting_table_t ST7701S_init_cmd_g[] = {
+    /* MADCTL: MX=1 (bit6) = horizontal mirror.
+     * Must be sent BEFORE Sleep Out (0x11) to take effect on ST7701S.
+     * Makes frame buffer Y=0 map to LEFT edge in landscape view.
+     */
+    {0x36, 1, {0x40}},
     {0x11, 0, {0x00}},
     {REGFLAG_DELAY, 120, {}},
     {0xFF, 5, {0x77, 0x01, 0x00, 0x00, 0x10}},
@@ -389,12 +394,51 @@ void mipi_display_init(void)
     MipiDsi_ST7701S_lcm_init();
     LcdcInitConfig();
     
-    mipi_display_clear(RGB565_CYAN);
-    
+    /* === DIAGNOSTIC: 16 vertical lines, 4 colors x 4 repeats, interval=25 ===
+     * Physical screen: 480x800 portrait.
+     * rotate90: frame buffer row = src_width-1-x, so row=799 -> leftmost on landscape.
+     * Draw from Y=799 downward so LEFT edge starts with RED.
+     * Pattern left->right: R G B Y R G B Y R G B Y R G B Y
+     */
+    {
+        u16 *fb16 = (u16 *)DDR_FRAME_BUFFER_ADDR;
+        u16 colors[4] = {
+            0xF800,  /* RED    */
+            0x07E0,  /* GREEN  */
+            0x001F,  /* BLUE   */
+            0xFFE0,  /* YELLOW */
+        };
+
+        /* black background */
+        memset(fb16, 0, LCDC_TEST_IMG_BUF_X * LCDC_TEST_IMG_BUF_Y * 2);
+
+        /* 16 lines from Y=796 downward, each 3 rows thick, spacing 25 rows
+         * Start at Y=796 (not 799) to avoid LCDC boundary artifact at Y=799.
+         * Line i=0 (RED) at Y=796~794 -> leftmost on landscape display.
+         */
+        for (int i = 0; i < 16; i++) {
+            u16 color = colors[i % 4];
+            int y_start = (LCDC_TEST_IMG_BUF_Y - 4) - i * 25;  /* 796, 771, 746... */
+            for (int dy = 0; dy < 3; dy++) {
+                int y = y_start - dy;
+                if (y < 0) break;
+                for (int x = 0; x < LCDC_TEST_IMG_BUF_X; x++) {
+                    fb16[y * LCDC_TEST_IMG_BUF_X + x] = color;
+                }
+            }
+        }
+
+        DCache_CleanInvalidate((u32)DDR_FRAME_BUFFER_ADDR,
+                               LCDC_TEST_IMG_BUF_X * LCDC_TEST_IMG_BUF_Y * 2);
+    }
+
     LCDC_DMAModeConfig(LCDC, LCDC_LAYER_BURSTSIZE_4X64BYTES);
     LCDC_DMADebugConfig(LCDC, LCDC_DMA_OUT_DISABLE, NULL);
-    
+
     LcdcEnable();
-    
-    RTK_LOGI(TAG, "Display initialized - Frame buffer at 0x%08X\n", DDR_FRAME_BUFFER_ADDR);
+
+    RTK_LOGI(TAG, "DIAGNOSTIC: color bars displayed, waiting 2s...\n");
+    DelayMs(2000);
+    RTK_LOGI(TAG, "DIAGNOSTIC done, LVGL will take over.\n");
+    /* === END DIAGNOSTIC === */
 }
