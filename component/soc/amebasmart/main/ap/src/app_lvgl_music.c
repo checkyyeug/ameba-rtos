@@ -12,11 +12,17 @@
 #include "lv_demo_music.h"
 #include "lv_port_disp.h"
 #include "lv_port_indev.h"
+#include "sd_music_scan.h"
 
 #ifdef CONFIG_LVGL
 
 static const char *const TAG = "LVGL_APP";
 static TaskHandle_t lvgl_task_handle = NULL;
+static sd_music_list_t g_music_list;
+
+/* Pointer arrays for LVGL Music Demo dynamic track list */
+static const char *g_track_titles[SD_MUSIC_MAX_FILES];
+static const char *g_track_artists[SD_MUSIC_MAX_FILES];
 
 /**
  * LVGL Task - Main loop for LVGL
@@ -54,6 +60,22 @@ static void lvgl_main_task(void *arg)
     lv_port_indev_init();
     RTK_LOGI(TAG, "Touch driver initialized\n");
 
+    // 初始化 SD 卡并扫描音乐文件
+    RTK_LOGI(TAG, "Initializing SD card...\n");
+    if (sd_music_init(&g_music_list)) {
+        RTK_LOGI(TAG, "SD ready: %d music file(s) found\n", g_music_list.count);
+        /* Build title/artist pointer arrays from scanned file names */
+        for (int i = 0; i < g_music_list.count; i++) {
+            g_track_titles[i]  = g_music_list.files[i].name;
+            g_track_artists[i] = "";  /* No artist info from filesystem */
+        }
+        /* Inject into Music Demo before starting */
+        lv_demo_music_set_tracks(g_track_titles, g_track_artists,
+                                 (uint32_t)g_music_list.count);
+    } else {
+        RTK_LOGW(TAG, "SD card not available\n");
+    }
+
     // 启动 Music Demo
     RTK_LOGI(TAG, "Starting Music Player Demo...\n");
     lv_demo_music();
@@ -88,7 +110,7 @@ void app_lvgl_music_start(void)
     ret = xTaskCreate(
         lvgl_main_task,
         "LVGL_Music",
-        8192,      // 堆栈大小 8KB
+        16384,     // 堆栈大小 16KB
         NULL,
         tskIDLE_PRIORITY + 3,  // 中高优先级
         &lvgl_task_handle
