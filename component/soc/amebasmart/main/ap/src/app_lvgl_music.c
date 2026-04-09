@@ -31,7 +31,7 @@ static void lvgl_main_task(void *arg)
     RTK_LOGI(TAG, "  LVGL Music Player Demo\n");
     RTK_LOGI(TAG, "  LVGL Version: %d.%d.%d\n", 
              LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH);
-    RTK_LOGI(TAG, "  Display: ST7701S 480x800 MIPI DSI\n");
+    RTK_LOGI(TAG, "  Display: ST7701S 480x800 (rotated to 800x480) MIPI DSI\n");
     RTK_LOGI(TAG, "========================================\n");
     RTK_LOGI(TAG, "\n");
     
