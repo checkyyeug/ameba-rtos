@@ -11,6 +11,7 @@
 #include "lvgl.h"
 #include "lv_demo_music.h"
 #include "lv_port_disp.h"
+#include "lv_port_indev.h"
 
 #ifdef CONFIG_LVGL
 
@@ -47,7 +48,12 @@ static void lvgl_main_task(void *arg)
     RTK_LOGI(TAG, "Initializing display driver...\n");
     lv_port_disp_init();
     RTK_LOGI(TAG, "Display driver initialized\n");
-    
+
+    // 初始化触摸驱动 (CST328)
+    RTK_LOGI(TAG, "Initializing touch driver (CST328)...\n");
+    lv_port_indev_init();
+    RTK_LOGI(TAG, "Touch driver initialized\n");
+
     // 启动 Music Demo
     RTK_LOGI(TAG, "Starting Music Player Demo...\n");
     lv_demo_music();
