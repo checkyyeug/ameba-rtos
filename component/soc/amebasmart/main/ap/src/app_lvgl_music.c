@@ -23,6 +23,7 @@ static sd_music_list_t g_music_list;
 /* Pointer arrays for LVGL Music Demo dynamic track list */
 static const char *g_track_titles[SD_MUSIC_MAX_FILES];
 static const char *g_track_artists[SD_MUSIC_MAX_FILES];
+static uint32_t    g_track_durations[SD_MUSIC_MAX_FILES];
 
 /**
  * LVGL Task - Main loop for LVGL
@@ -66,12 +67,14 @@ static void lvgl_main_task(void *arg)
         RTK_LOGI(TAG, "SD ready: %d music file(s) found\n", g_music_list.count);
         /* Build title/artist pointer arrays from scanned file names */
         for (int i = 0; i < g_music_list.count; i++) {
-            g_track_titles[i]  = g_music_list.files[i].name;
-            g_track_artists[i] = "";  /* No artist info from filesystem */
+            g_track_titles[i]    = g_music_list.files[i].name;
+            g_track_artists[i]   = "";  /* No artist info from filesystem */
+            g_track_durations[i] = g_music_list.files[i].duration_sec;
         }
         /* Inject into Music Demo before starting */
         lv_demo_music_set_tracks(g_track_titles, g_track_artists,
                                  (uint32_t)g_music_list.count);
+        lv_demo_music_set_durations(g_track_durations);
     } else {
         RTK_LOGW(TAG, "SD card not available\n");
     }
